@@ -14,7 +14,7 @@
 - [2. Taxonomy](#2-taxonomy)
 - [3. Paper List](#3-paper-list)
 - [4. Research Gaps](#4-research-gaps)
-- [5. Suggested Research Direction](#5-suggested-research-direction)
+- [5. 适合的研究切入点](#5-适合的研究切入点)
 - [6. Suggested Repository Structure](#6-suggested-repository-structure)
 
 ## 1. Overview
@@ -25,14 +25,14 @@
 
 ## 2. Taxonomy
 
-| Category | Representative Papers | Core Idea | Suitable Research Entry Point |
+| Category | Representative Papers | Core Idea | 适合的研究切入点 |
 | --- | --- | --- | --- |
-| Cache Reuse | TeaCache, AdaCache, EasyCache, BWCache, SmoothCache, VLA-Cache, EfficientVLA | 相邻 timestep、layer、block 或机器人帧存在冗余，可复用中间结果。 | Runtime / plug-in style acceleration. |
-| Dynamic Token Pruning | SDTP, SlimInfer, ATP-LLaVA, DyCoke, DTP | 不同 token 的贡献不同，可按输入、层或时间动态保留关键 token。 | Difficulty-aware pruning with quality constraints. |
-| Early Exit / Layer Skipping | DyVTE, DySL-VLA, Early-exit LLM, Runaway is Ashamed | 不同样本、不同视觉 token 或不同动作步骤不一定需要完整计算。 | Tail latency, batch throughput, and adaptive depth. |
-| Sparse Attention | PASA | 视频 DiT 的 attention 计算量大，但稀疏化需要避免闪烁和时序不稳定。 | Structured acceleration for video generation. |
-| Few-step Distillation / Distribution Matching | RMD, DisCa | 减少 diffusion sampling steps，或让缓存策略与蒸馏兼容。 | Large speedup with higher training cost. |
-| Action Representation Optimization | FAST, OpenVLA-OFT, SmolVLA, Knowledge Insulation, Stable-FAST | 将高频连续动作转化为更短、更稳定、更易生成的 action token、action chunk 或 continuous action head。 | Low-latency VLA deployment. |
+| Cache Reuse | TeaCache, AdaCache, EasyCache, BWCache, SmoothCache, VLA-Cache, EfficientVLA | 相邻 timestep、layer、block 或机器人帧存在冗余，可复用中间结果。 | 运行时插件式加速，适合低成本复现与工程部署。 |
+| Dynamic Token Pruning | SDTP, SlimInfer, ATP-LLaVA, DyCoke, DTP | 不同 token 的贡献不同，可按输入、层或时间动态保留关键 token。 | 难度感知剪枝，并显式加入质量约束。 |
+| Early Exit / Layer Skipping | DyVTE, DySL-VLA, Early-exit LLM, Runaway is Ashamed | 不同样本、不同视觉 token 或不同动作步骤不一定需要完整计算。 | 尾延迟、批量吞吐与自适应网络深度优化。 |
+| Sparse Attention | PASA | 视频 DiT 的 attention 计算量大，但稀疏化需要避免闪烁和时序不稳定。 | 面向视频生成的结构化注意力加速。 |
+| Few-step Distillation / Distribution Matching | RMD, DisCa | 减少 diffusion sampling steps，或让缓存策略与蒸馏兼容。 | 以更高训练成本换取更大推理加速比。 |
+| Action Representation Optimization | FAST, OpenVLA-OFT, SmolVLA, Knowledge Insulation, Stable-FAST | 将高频连续动作转化为更短、更稳定、更易生成的 action token、action chunk 或 continuous action head。 | 面向低延迟机器人控制与端侧 VLA 部署。 |
 
 ## 3. Paper List
 
@@ -40,41 +40,41 @@
 
 | Technique | Paper | Year / Status | Main Contribution | Why It Matters |
 | --- | --- | --- | --- | --- |
-| Timestep-aware cache | TeaCache: Timestep Embedding Tells: It’s Time to Cache for Video Diffusion Model | CVPR 2025 | 使用 timestep embedding 估计相邻去噪步的输出差异，并决定何时复用缓存。 | 入门必读，适合理解视频扩散模型为什么可以按 timestep 缓存。 |
-| Adaptive cache | AdaCache: Adaptive Caching for Faster Video Generation with Diffusion Transformers | ICCV 2025 | 根据不同视频的生成难度自适应设计 cache schedule，而不是使用固定缓存间隔。 | 适合写“样本难度感知推理加速”。 |
-| Runtime-adaptive cache | EasyCache: Less is Enough: Training-Free Video Diffusion Acceleration via Runtime-Adaptive Caching | 2025 arXiv | 运行时动态复用 transformation vectors，不依赖离线 profiling 或大量参数搜索。 | 工程落地价值较高，适合作为插件式加速参考。 |
-| Block-wise cache | BWCache: Accelerating Video Diffusion Transformers through Block-Wise Caching | 2025 arXiv / OpenReview | 发现 DiT block 特征变化呈 U 型，提出 block-level 动态缓存。 | 适合关注“层级缓存”和“模块级动态计算”。 |
-| Layer-wise feature cache | SmoothCache: A Universal Inference Acceleration Technique for Diffusion Transformers | 2024 arXiv | 根据 layer-wise representation error 设计静态缓存策略。 | 可作为 TeaCache / BWCache 类方法的前置参考。 |
-| Diffusion distillation | RMD: Cross-Resolution Distribution Matching for Diffusion Distillation | 2026 arXiv | 用 cross-resolution distribution matching 缓解多分辨率少步蒸馏中的分布差异。 | 适合写“few-step distillation + multi-resolution inference”。 |
-| Sparse attention | PASA: Ride the Wave: Precision-Allocated Sparse Attention for Smooth Video Generation | 2026 arXiv | 根据生成轨迹动态分配 attention 预算，并缓解 video flickering。 | 说明视频加速不能只快，还要保持时间平滑。 |
-| Learnable cache + distillation | DisCa: Accelerating Video Diffusion Transformers with Distillation-Compatible Learnable Feature Caching | 2026 arXiv / CVPR 2026 status to verify | 使用轻量 predictor 学习高维 feature 演化，使 caching 与 distillation 更兼容。 | 适合研究 training-free cache 之后的 learnable cache。 |
+| Timestep-aware cache | [TeaCache: Timestep Embedding Tells: It’s Time to Cache for Video Diffusion Model](https://arxiv.org/abs/2411.19108) | CVPR 2025 | 使用 timestep embedding 估计相邻去噪步的输出差异，并决定何时复用缓存。 | 入门必读，适合理解视频扩散模型为什么可以按 timestep 缓存。 |
+| Adaptive cache | [AdaCache: Adaptive Caching for Faster Video Generation with Diffusion Transformers](https://arxiv.org/abs/2411.02397) | ICCV 2025 | 根据不同视频的生成难度自适应设计 cache schedule，而不是使用固定缓存间隔。 | 适合写“样本难度感知推理加速”。 |
+| Runtime-adaptive cache | [EasyCache: Less is Enough: Training-Free Video Diffusion Acceleration via Runtime-Adaptive Caching](https://arxiv.org/abs/2507.02860) | 2025 arXiv | 运行时动态复用 transformation vectors，不依赖离线 profiling 或大量参数搜索。 | 工程落地价值较高，适合作为插件式加速参考。 |
+| Block-wise cache | [BWCache: Accelerating Video Diffusion Transformers through Block-Wise Caching](https://arxiv.org/abs/2509.13789) | 2025 arXiv / OpenReview | 发现 DiT block 特征变化呈 U 型，提出 block-level 动态缓存。 | 适合关注“层级缓存”和“模块级动态计算”。 |
+| Layer-wise feature cache | [SmoothCache: A Universal Inference Acceleration Technique for Diffusion Transformers](https://arxiv.org/abs/2411.10510) | 2024 arXiv | 根据 layer-wise representation error 设计静态缓存策略。 | 可作为 TeaCache / BWCache 类方法的前置参考。 |
+| Diffusion distillation | [RMD: Cross-Resolution Distribution Matching for Diffusion Distillation](https://arxiv.org/abs/2603.06136) | 2026 arXiv | 用 cross-resolution distribution matching 缓解多分辨率少步蒸馏中的分布差异。 | 适合写“few-step distillation + multi-resolution inference”。 |
+| Sparse attention | [PASA: Ride the Wave: Precision-Allocated Sparse Attention for Smooth Video Generation](https://arxiv.org/abs/2604.12219) | 2026 arXiv | 根据生成轨迹动态分配 attention 预算，并缓解 video flickering。 | 说明视频加速不能只快，还要保持时间平滑。 |
+| Learnable cache + distillation | [DisCa: Accelerating Video Diffusion Transformers with Distillation-Compatible Learnable Feature Caching](https://arxiv.org/abs/2602.05449) | 2026 arXiv / CVPR 2026 status to verify | 使用轻量 predictor 学习高维 feature 演化，使 caching 与 distillation 更兼容。 | 适合研究 training-free cache 之后的 learnable cache。 |
 
 ### 3.2 Dynamic LLM / MLLM / Video-LLM Acceleration
 
 | Technique | Paper | Year / Status | Main Contribution | Why It Matters |
 | --- | --- | --- | --- | --- |
-| LLM token pruning | SDTP: Saliency-driven Dynamic Token Pruning for Large Language Models | 2025 arXiv | 逐层估计 token 重要性并动态剪枝，减少长序列推理计算。 | LLM 动态 token pruning 的代表性工作。 |
-| Long-context pruning | SlimInfer: Accelerating Long-Context LLM Inference via Dynamic Token Pruning | AAAI 2026 | 基于 information diffusion 现象动态剪掉非关键 prompt token，并管理 KV cache。 | 适合长上下文推理与 KV cache 优化方向。 |
-| Visual-token early exit | DyVTE: Accelerating Multimodal Large Language Models via Dynamic Visual-Token Exit | NeurIPS 2025 | 当文本 token 已获得足够视觉信息后，让视觉 token 动态退出后续计算。 | 可衔接 MLLM 与 VLA 中的视觉 token 冗余问题。 |
-| Adaptive visual token pruning | ATP-LLaVA: Adaptive Token Pruning for Large Vision Language Models | CVPR 2025 | 提出 instance-wise、layer-wise adaptive visual token pruning。 | 多模态视觉 token 剪枝代表方法。 |
-| Problem analysis | Token Pruning in Multimodal Large Language Models: Are We Solving the Right Problem? | ACL Findings 2025 | 系统反思 attention score、语言信息、随机选择、评估协议等问题。 | 适合放在综述的 limitation / reflection 部分。 |
-| Video-LLM token compression | DyCoke: Dynamic Compression of Tokens for Fast Video Large Language Models | CVPR 2025 | 在 decoding 阶段动态压缩 temporal 与 spatial redundancy。 | 适合连接视频理解大模型与动态 token 压缩。 |
-| Early-exit algorithm | Accelerating Large Language Model Inference via Early-Exiting Algorithms | 2025 arXiv | 分析 early-exit 在 batch inference 中的系统瓶颈。 | 说明“算法少算”不一定等于“系统更快”。 |
-| Embodied agent early exit | Runaway is Ashamed, But Helpful: On the Early-Exit Behavior of LLM-based Agents in Embodied Environments | EMNLP Findings 2025 | 在具身环境中减少冗余动作，并评估 progress degradation。 | 适合任务级 early-exit 与 embodied agent 加速。 |
+| LLM token pruning | [SDTP: Saliency-driven Dynamic Token Pruning for Large Language Models](https://arxiv.org/abs/2504.04514) | 2025 arXiv | 逐层估计 token 重要性并动态剪枝，减少长序列推理计算。 | LLM 动态 token pruning 的代表性工作。 |
+| Long-context pruning | [SlimInfer: Accelerating Long-Context LLM Inference via Dynamic Token Pruning](https://ojs.aaai.org/index.php/AAAI/article/view/40502) | AAAI 2026 | 基于 information diffusion 现象动态剪掉非关键 prompt token，并管理 KV cache。 | 适合长上下文推理与 KV cache 优化方向。 |
+| Visual-token early exit | [DyVTE: Accelerating Multimodal Large Language Models via Dynamic Visual-Token Exit](https://arxiv.org/abs/2411.19628) | NeurIPS 2025 | 当文本 token 已获得足够视觉信息后，让视觉 token 动态退出后续计算。 | 可衔接 MLLM 与 VLA 中的视觉 token 冗余问题。 |
+| Adaptive visual token pruning | [ATP-LLaVA: Adaptive Token Pruning for Large Vision Language Models](https://arxiv.org/abs/2412.00447) | CVPR 2025 | 提出 instance-wise、layer-wise adaptive visual token pruning。 | 多模态视觉 token 剪枝代表方法。 |
+| Problem analysis | [Token Pruning in Multimodal Large Language Models: Are We Solving the Right Problem?](https://arxiv.org/abs/2502.11501) | ACL Findings 2025 | 系统反思 attention score、语言信息、随机选择、评估协议等问题。 | 适合放在综述的 limitation / reflection 部分。 |
+| Video-LLM token compression | [DyCoke: Dynamic Compression of Tokens for Fast Video Large Language Models](https://arxiv.org/abs/2411.15024) | CVPR 2025 | 在 decoding 阶段动态压缩 temporal 与 spatial redundancy。 | 适合连接视频理解大模型与动态 token 压缩。 |
+| Early-exit algorithm | [Accelerating Large Language Model Inference via Early-Exiting Algorithms](https://arxiv.org/abs/2509.05915) | 2025 arXiv | 分析 early-exit 在 batch inference 中的系统瓶颈。 | 说明“算法少算”不一定等于“系统更快”。 |
+| Embodied agent early exit | [Runaway is Ashamed, But Helpful: On the Early-Exit Behavior of LLM-based Agents in Embodied Environments](https://arxiv.org/abs/2505.17616) | EMNLP Findings 2025 | 在具身环境中减少冗余动作，并评估 progress degradation。 | 适合任务级 early-exit 与 embodied agent 加速。 |
 
 ### 3.3 VLA / Vision-Language-Action Acceleration
 
 | Technique | Paper | Year / Status | Main Contribution | Why It Matters |
 | --- | --- | --- | --- | --- |
-| Action tokenization | FAST: Efficient Action Tokenization for Vision-Language-Action Models | 2025 arXiv | 使用 DCT 将连续动作序列压缩为 frequency-space action tokens。 | VLA 动作 token 化必读。 |
-| Action chunking / parallel decoding | OpenVLA-OFT: Fine-Tuning Vision-Language-Action Models: Optimizing Speed and Success | 2025 arXiv | 引入 parallel decoding、action chunking、continuous action representation 和 L1 regression。 | 直接对应 VLA 的速度与成功率协同优化。 |
-| Adaptive token caching | VLA-Cache: Towards Efficient Vision-Language-Action Model via Adaptive Token Caching in Robotic Manipulation | 2025 arXiv / OpenReview | 识别连续帧中变化小的视觉 token，并通过 KV-cache 复用计算结果。 | VLA cache acceleration 的直接参考。 |
-| Compact VLA / async inference | SmolVLA: A Vision-Language-Action Model for Affordable and Efficient Robotics | 2025 arXiv | 设计小型 VLA，并使用异步推理栈解耦感知、动作预测与动作执行。 | 适合端侧、低成本机器人部署。 |
-| Knowledge insulation | Knowledge Insulating Vision-Language-Action Models: Train Fast, Run Fast, Generalize Better | 2025 arXiv | 研究 action expert 与 VLM backbone 的耦合，减少连续动作专家对语义知识的破坏。 | 适合理解动作头高效化与语义知识保持。 |
-| Visual token pruning | DTP: A Simple yet Effective Distracting Token Pruning Framework for Vision-Language Action Models | 2026 arXiv / OpenReview | 动态剪掉与任务无关的 distracting image tokens。 | 适合研究动作相关的视觉 token pruning。 |
-| Dynamic layer skipping | DySL-VLA: Efficient VLA Inference via Dynamic-Static Layer-Skipping | 2026 arXiv / DAC 2026 page | 区分 informative layers 与 incremental layers，并根据 action importance 动态跳层。 | 适合研究 VLA dynamic depth。 |
-| Structured training-free compression | EfficientVLA: Training-Free Acceleration and Compression for VLA Models | 2025 arXiv / OpenReview | 联合 language layer pruning、visual token selection 与 diffusion action head caching。 | 适合做 VLA full-pipeline acceleration 代表。 |
-| Inference stabilization | Stable-FAST: Stabilizing Inference of Autoregressive VLA Models | 2026 OpenReview, status to verify | 改进 action tokenization 的推理稳定性，降低动作不稳定和执行时间。 | 说明 VLA 加速还必须关注动作平滑与控制稳定性。 |
+| Action tokenization | [FAST: Efficient Action Tokenization for Vision-Language-Action Models](https://arxiv.org/abs/2501.09747) | 2025 arXiv | 使用 DCT 将连续动作序列压缩为 frequency-space action tokens。 | VLA 动作 token 化必读。 |
+| Action chunking / parallel decoding | [OpenVLA-OFT: Fine-Tuning Vision-Language-Action Models: Optimizing Speed and Success](https://arxiv.org/abs/2502.19645) | 2025 arXiv | 引入 parallel decoding、action chunking、continuous action representation 和 L1 regression。 | 直接对应 VLA 的速度与成功率协同优化。 |
+| Adaptive token caching | [VLA-Cache: Towards Efficient Vision-Language-Action Model via Adaptive Token Caching in Robotic Manipulation](https://arxiv.org/abs/2502.02175) | 2025 arXiv / OpenReview | 识别连续帧中变化小的视觉 token，并通过 KV-cache 复用计算结果。 | VLA cache acceleration 的直接参考。 |
+| Compact VLA / async inference | [SmolVLA: A Vision-Language-Action Model for Affordable and Efficient Robotics](https://arxiv.org/abs/2506.01844) | 2025 arXiv | 设计小型 VLA，并使用异步推理栈解耦感知、动作预测与动作执行。 | 适合端侧、低成本机器人部署。 |
+| Knowledge insulation | [Knowledge Insulating Vision-Language-Action Models: Train Fast, Run Fast, Generalize Better](https://arxiv.org/abs/2505.23705) | 2025 arXiv | 研究 action expert 与 VLM backbone 的耦合，减少连续动作专家对语义知识的破坏。 | 适合理解动作头高效化与语义知识保持。 |
+| Visual token pruning | [DTP: A Simple yet Effective Distracting Token Pruning Framework for Vision-Language Action Models](https://arxiv.org/abs/2601.16065) | 2026 arXiv / OpenReview | 动态剪掉与任务无关的 distracting image tokens。 | 适合研究动作相关的视觉 token pruning。 |
+| Dynamic layer skipping | [DySL-VLA: Efficient VLA Inference via Dynamic-Static Layer-Skipping](https://arxiv.org/abs/2602.22896) | 2026 arXiv / DAC 2026 page | 区分 informative layers 与 incremental layers，并根据 action importance 动态跳层。 | 适合研究 VLA dynamic depth。 |
+| Structured training-free compression | [EfficientVLA: Training-Free Acceleration and Compression for VLA Models](https://arxiv.org/abs/2506.10100) | 2025 arXiv / OpenReview | 联合 language layer pruning、visual token selection 与 diffusion action head caching。 | 适合做 VLA full-pipeline acceleration 代表。 |
+| Inference stabilization | [Stable-FAST: Stabilizing Inference of Autoregressive VLA Models](https://openreview.net/forum?id=0XQSa9CjR7) | 2026 OpenReview, status to verify | 改进 action tokenization 的推理稳定性，降低动作不稳定和执行时间。 | 说明 VLA 加速还必须关注动作平滑与控制稳定性。 |
 
 ## 4. Research Gaps
 
@@ -102,17 +102,17 @@ ATP-LLaVA 中被剪掉的视觉 token 后续不可恢复。DyVTE 也指出 full 
 
 VLA 的速度问题不能脱离机器人控制稳定性。OpenVLA-OFT 暴露了多模态 demonstration、pretraining 适用性和语言 grounding 稳定性等问题。Stable-FAST 进一步说明，自回归 VLA 的 action instability 本身就是影响真实部署的关键因素。
 
-## 5. Suggested Research Direction
+## 5. 适合的研究切入点
 
 一个更有价值的研究切入点不是简单写“提高推理速度”，而是聚焦于：
 
-> Reliable Dynamic Inference Acceleration for AIGC and VLA: introducing recoverable mechanisms, task-sensitive error control, and hardware-friendly scheduling into caching, pruning, layer skipping, and action generation.
+> 面向 AIGC 与 VLA 的可靠动态推理加速：在缓存复用、token 剪枝、层跳过与动作生成中引入可恢复机制、任务敏感误差控制和硬件友好调度。
 
 可以进一步拆成三个方向：
 
-1. **Recoverable Dynamic Computation**: 在 token pruning、visual-token exit、layer skipping 中加入可恢复机制，避免早期误判造成不可逆信息损失。
-2. **Task-sensitive Error Control**: 不仅约束图像质量或语言指标，还引入动作稳定性、检测/分割性能、机器人成功率等任务反馈。
-3. **Hardware-friendly Scheduling**: 将动态策略与 KV cache、batching、GPU parallelism、FlashAttention 和端侧部署机制联合设计。
+1. **可恢复动态计算**: 在 token pruning、visual-token exit、layer skipping 中加入可恢复机制，避免早期误判造成不可逆信息损失。
+2. **任务敏感误差控制**: 不仅约束图像质量或语言指标，还引入动作稳定性、检测/分割性能、机器人成功率等任务反馈。
+3. **硬件友好调度**: 将动态策略与 KV cache、batching、GPU parallelism、FlashAttention 和端侧部署机制联合设计。
 
 ## 6. Suggested Repository Structure
 
